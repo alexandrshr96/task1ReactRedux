@@ -1,54 +1,113 @@
 import React from 'react';
-import * as el from './style';
+import {
+  SemanticFooter,
+  FooterLeft,
+  FooterMiddle,
+  FooterRight,
+  Filters,
+  FiltersItem,
+  FiltersLink,
+  Clearbutton
+} from './style';
+import { connect } from 'react-redux';
+import { setVisibilityFilter as setVisibilityFilterAction,
+         removeCompletedTodo as removeCompletedTodoAction,} from '../../actions/';
+import { visibilityFilters } from '../../constants';
 
 
 class Footer extends React.Component {
-  constructor(props){
-    super(props);
-    this.filterItem = ['all','active','completed'];
+
+  handleSetFilter = (filter) => {
+    const { setVisibilityFilter } = this.props
+
+    setVisibilityFilter(filter);
+  }
+
+  handleRemoveCompletedTodo = () => {
+    const { removeCompletedTodo} = this.props
+
+    removeCompletedTodo();
+  }
+
+  updateCounter = () => {
+    const { todoItems } = this.props
+    let counter = 0;
+
+    todoItems.forEach(item => {
+      if(!item.completed){
+        counter++;
+      }
+    });
+
+    return counter;
+  }
+
+  createClearButton = () => {
+    const { countCompleted } = this.props
+
+    if(countCompleted() > 0){
+      return <Clearbutton
+        className="clear-btn"
+        onClick={this.handleRemoveCompletedTodo}
+      >Clear completed</Clearbutton>
+    }
   }
 
   render(){
-    if(this.props.quantityItems === 0){
-      return null;
-    }
-
-    let clearButton;
-
-    if(this.props.completedCounter > 0){
-      clearButton = <el.Clearbutton
-        className="clear-btn"
-        onClick={this.props.clearChecked}
-    >Clear completed</el.Clearbutton>
-    }
+    const { lcStore, filters } = this.props
+    let FooterWrapper = SemanticFooter(lcStore.getItem().length);
+    let button = this.createClearButton();
+    const { all, active, completed } = visibilityFilters;
+    const linksNameFilter = [all, active, completed];
+    const linksName = Object.keys(visibilityFilters);
 
     return(
-      <el.SemanticFooter className="footer">
-        <el.FooterLeft className="footer__left">
+      <FooterWrapper className="footer">
+        <FooterLeft className="footer__left">
           <span className="todo-count">
-            <strong>{this.props.count}</strong>
+            <strong>{this.updateCounter()}</strong>
             <span> items left</span>
           </span>
-        </el.FooterLeft>
-        <el.FooterMiddle className="footer__middle">
-          <el.Filters className="filters">
-            {this.filterItem.map(item=>
-              <el.FiltersItem key={this.filterItem.indexOf(item)} className="filters__item">
-                <el.FiltersLink
+        </FooterLeft>
+        <FooterMiddle className="footer__middle">
+          <Filters className="filters">
+            {linksNameFilter.map(Button =>
+              <FiltersItem key={linksNameFilter.indexOf(Button)} className="filters__item">
+                <FiltersLink
                   href="#"
-                  className={this.props.nowShowing === item ? `filters__link ${item} check` : `filters__link ${item}`}
-                  onClick={()=>this.props.filterUpdate(item)}
-                >{item}</el.FiltersLink>
-              </el.FiltersItem>
+                  className='filters__link'
+                  onClick={() => this.handleSetFilter(Button)}
+                  style={filters === Button ? {border:'1px solid rgba(175, 47, 47, 0.2)'}
+                    : {border:'1px solid transparent'}}
+                >{linksName[linksNameFilter.indexOf(Button)]}</FiltersLink>
+              </FiltersItem>
             )}
-          </el.Filters>
-        </el.FooterMiddle>
-        <el.FooterRight className="footer__right">
-          {clearButton}
-        </el.FooterRight>
-      </el.SemanticFooter>
+          </Filters>
+        </FooterMiddle>
+        <FooterRight className="footer__right">
+          {button}
+        </FooterRight>
+      </FooterWrapper>
     );
   }
 }
 
-export default Footer
+const mapStateToProps = (state) => {
+  return {
+    todoItems: state.todoItems,
+    filters: state.filters
+  }
+}
+
+const mapDispatchToProps = dispatch => {
+  return {
+    setVisibilityFilter: payload => {
+      dispatch(setVisibilityFilterAction(payload))
+    },
+    removeCompletedTodo: payload => {
+      dispatch(removeCompletedTodoAction(payload))
+    },
+  }
+}
+
+export default connect( mapStateToProps, mapDispatchToProps )(Footer)

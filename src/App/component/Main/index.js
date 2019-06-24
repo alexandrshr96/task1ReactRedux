@@ -1,143 +1,116 @@
 import React from 'react';
 import TodoItem from './TodoItem/index';
-import  {ToggleAllInput, ToggleAllLabel, TodoList} from './style';
+import { connect } from 'react-redux';
+import { ToggleAllInput, ToggleAllLabel, TodoList } from './style';
+import { toggleTodo as toggleTodoAction,
+         deleteTodo as deleteTodoAction,
+         toggleAllTodo as toggleAllTodoAction,
+         editTodo as editTodoAction } from '../../actions/index';
 
 class Main extends React.Component{
   state = {
-    textFromEditInput: '',
     editing: null,
   }
 
-  toggleAll = () => {
-    const array = this.props.store.getItem() || [];
+  handleToggleItem = id => {
+    const { toggleTodo } = this.props;
 
-    array.every(el=> el.checked === true) ?
-      this.removeCheckedAllItems(array)
-        : this.checkedAllItems(array);
+    toggleTodo(id);
   }
 
-  checkedAllItems(array){
-    array.forEach(el=>{
-      el.checked = true;
-    })
+  updateStorage = () => {
+    const { todoItems, lcStore, lcFilter, filters } = this.props
 
-    this.props.store.setItem(array);
-    this.props.reRender();
+    lcStore.setItem(todoItems);
+    lcFilter.setItem(filters);
   }
 
-  removeCheckedAllItems(array){
-    array.forEach(el=>{
-      el.checked = false;
-    })
+  handleDeleteItem = id => {
+    const { deleteTodo } = this.props;
 
-    this.props.store.setItem(array);
-    this.props.reRender();
+    deleteTodo(id);
   }
 
-  toggle = (id) => {
-    const array = this.props.store.getItem() || [];
+  handleToggleAllItems = () => {
+    const { toggleAllTodo } = this.props;
 
-    array.forEach(el => {
-      if(el.id === id) el.checked = !el.checked
-    });
-
-    this.props.store.setItem(array);
-    this.props.reRender();
+    toggleAllTodo();
   }
 
-  delete = (id) => {
-    const array = this.props.store.getItem() || [];
+  handleEditItem = e => {
+    const { editTodo } = this.props
 
-    array.splice(array.indexOf(array.find(el=> el.id === id )),1);
-
-    this.props.store.setItem(array);
-    this.props.reRender();
-  }
-
-  handleShowEdit = (id) => {
-    this.setState({
-      editing: id
-    });
-  }
-
-  handleChangeEditInput = (e) => {
-    this.setState({
-      textFromEditInput: e.target.value,
-    });
-  }
-
-  handleSubmitEdit = (e) => {
     if (e.keyCode !== 13) {
       return;
     }
 
     e.preventDefault();
 
-    const array = this.props.store.getItem();
-    let val = this.state.textFromEditInput.trim();
+    let text = e.target.value.trim();
 
-    if(!val){
+    if(!text){
       return;
     }
 
-    array.forEach(el=>{
-      if(el.id === +(e.target.id)){
-        el.value = this.state.textFromEditInput;
-      }
-    })
+    let obj = {
+      id: parseInt(e.target.id, 10),
+      text
+    }
 
-    this.props.store.setItem(array);
-    this.props.reRender();
+    editTodo(obj);
+
+    e.target.value = '';
     this.setState({
-      editing: null,
-      textFromEditInput: ''
+      editing: null
     });
   }
 
-  handleChangeBlurInput = () => {
+  showEditInput = id => {
     this.setState({
-      editing: null,
-      textFromEditInput: ''
+      editing: id
     });
+  }
+
+  editInputBlur = () => {
+    this.setState({
+      editing: null
+    });
+  }
+
+  createToggleAllLabel(){
+    const { lcStore, todoItems, countCompleted } = this.props
+
+    if(lcStore.getItem().length > 0){
+      let obj = {
+        length: todoItems.length,
+        counter: countCompleted()
+      }
+      let ToggleAllLabelWrapper = ToggleAllLabel(obj);
+
+      let btn = <ToggleAllLabelWrapper
+        className="toggle-all-label"
+        htmlFor="toggle-all"
+        onClick={this.handleToggleAllItems}>
+      </ToggleAllLabelWrapper>;
+
+      return btn;
+    }
+  }
+
+  filteringList = () => {
+    const { todoItems, filters } = this.props
+
+    let items = filters === 'SHOW_ACTIVE' ? todoItems.filter(item => item.completed === false)
+      : filters === 'SHOW_COMPLETED' ? todoItems.filter(item => item.completed === true)
+        : todoItems;
+
+    return items;
   }
 
   render(){
-    const itemsLength = this.props.quantityItems;
-    const list = this.props.items;
-    let items;
-    let ToggleAllLabelWrapper;
-    let a;
-
-    if(itemsLength){
-      ToggleAllLabelWrapper = ToggleAllLabel(this.props.completedCounter, this.props.quantityItems);
-       a = <ToggleAllLabelWrapper
-        className="toggle-all-label"
-        htmlFor="toggle-all"
-        onClick={this.toggleAll}>
-      </ToggleAllLabelWrapper>;
-    }
-
-    if(list){
-      items = list.map(item=>
-        <TodoItem
-          store={this.props.store}
-          key={item.id}
-          id={item.id}
-          value={item.value}
-          checked={item.checked}
-          reRender={this.props.reRender}
-          items={this.props.items}
-          toggle={this.toggle}
-          delete={this.delete}
-          handleShowEdit={this.handleShowEdit}
-          handleChangeEditInput={this.handleChangeEditInput}
-          handleSubmitEdit={this.handleSubmitEdit}
-          handleChangeBlurInput={this.handleChangeBlurInput}
-          editing={this.state.editing}
-          textFromEditInput={this.state.textFromEditInput}
-        />
-      )
-    }
+    this.updateStorage();
+    const clearButton = this.createToggleAllLabel();
+    const items = this.filteringList();
 
     return(
       <section className="main">
@@ -146,13 +119,48 @@ class Main extends React.Component{
           id="toggle-all"
           type="checkbox">
         </ToggleAllInput>
-        {a}
+        {clearButton}
         <TodoList className="todo-list">
-          {items}
+          {items.map(item=>
+            <TodoItem
+              key={item.id}
+              item={item}
+              toggle={this.handleToggleItem}
+              remove={this.handleDeleteItem}
+              edit={this.handleEditItem}
+              showEdit={this.showEditInput}
+              editing={this.state.editing}
+              blur={this.editInputBlur}
+            />
+          )}
         </TodoList>
       </section>
     );
   }
 }
 
-export default Main
+const mapStateToProps = (state, ownProps) => {
+  return {
+    todoItems: state.todoItems,
+    filters: state.filters,
+  }
+}
+
+const mapDispatchToProps = dispatch => {
+  return {
+    toggleTodo: payload => {
+      dispatch(toggleTodoAction(payload))
+    },
+    deleteTodo: payload => {
+      dispatch(deleteTodoAction(payload))
+    },
+    toggleAllTodo: payload => {
+      dispatch(toggleAllTodoAction(payload))
+    },
+    editTodo: payload => {
+      dispatch(editTodoAction(payload))
+    }
+  }
+}
+
+export default connect(mapStateToProps,mapDispatchToProps)(Main)

@@ -3,35 +3,44 @@ import './style.css';
 
 class TodoItem extends React.Component{
 
-  render(){
-    let input;
-    if(this.props.editing === this.props.id){
-      input = <input
+  createEditInput = ({blur, edit, item, editing}) => {
+    if(editing === item.id){
+      return <input
         className='edit show'
-        onChange={this.props.handleChangeEditInput}
-        onBlur={this.props.handleChangeBlurInput}
-        onKeyDown={this.props.handleSubmitEdit}
-        value={this.props.textFromEditInput}
-        id={this.props.id}
+        onBlur={blur}
+        onKeyDown={edit}
+        id={item.id}
         autoFocus
     ></input>
     }
+  }
+
+  render(){
+    const { item, toggle, remove, showEdit, editing, blur, edit } = this.props;
+    const obj = {
+      blur,
+      edit,
+      item,
+      editing
+    }
+    const input = this.createEditInput(obj);
+
     return(
       <li className='todo-list__item'>
-        <div className='todo-list__item-content' id={this.props.id}>
+        <div className='todo-list__item-content' id={item.id}>
           <input type='checkbox' id='todo-list__item-check' className='todo-list__item-check'></input>
           <label
-            className= {this.props.checked ? 'todo-list__item-check-label check' : 'todo-list__item-check-label'}
+            className= {item.completed ? 'todo-list__item-check-label check' : 'todo-list__item-check-label'}
             htmlFor='todo-list__item-check'
-            onClick={()=>this.props.toggle(this.props.id)}
+            onClick={()=>toggle(item.id)}
           ></label>
           <span
             className='todo-list__item-text'
-            onDoubleClick={()=>this.props.handleShowEdit(this.props.id)}
-          >{this.props.value}</span>
+            onDoubleClick={()=>showEdit(item.id)}
+          >{item.text}</span>
           <button
             className='todo-list__item-close'
-            onClick={()=>this.props.delete(this.props.id)}
+            onClick={()=>remove(item.id)}
           >X</button>
         </div>
         {input}

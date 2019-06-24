@@ -1,21 +1,10 @@
 import { combineReducers } from 'redux'
+import todoItems from './todoItems'
+import filters from './filters'
 
-const todoItems = (state = [], action) => {
-  switch(action.type) {
-    case 'ADD_TODO':
-      return [
-        ...state,
-        {
-          id: action.id,
-          text: action.text,
-          completed: false
-        }
-      ]
-    default :
-      return state
-  }
-}
-
-export default combineReducers({
+const todoApp = combineReducers({
   todoItems,
+  filters
 })
+
+export default todoApp

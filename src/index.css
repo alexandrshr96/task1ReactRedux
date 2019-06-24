@@ -1,7 +1,7 @@
-@font-face {
-  font-family: Helvetica;
+/* @font-face {
+  font-family: Roboto;
   src: url(./fonts/HelveticaNeue-Light.woff);
-}
+} */
 
 *{
   box-sizing: border-box;
@@ -12,7 +12,7 @@ body{
   height: 100vh;
   margin: 0;
   background-color: #f5f5f5;
-  font-family: 'Helvetica', Helvetica, Arial, sans-serif;
+  font-family: 'Roboto', sans-serif;
   font-size: 14px;
 }
 

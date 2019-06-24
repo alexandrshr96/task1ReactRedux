@@ -5,7 +5,7 @@ const ToggleAllInput = styled.input`
   display: none;
 `;
 
- const ToggleAllLabel = (counter,quantity) =>  styled.label`
+ const ToggleAllLabel = ({counter,length}) =>  styled.label`
       position: absolute;
       width: 60px;
       height: 34px;
@@ -19,7 +19,7 @@ const ToggleAllInput = styled.input`
         content: '❯';
         font-size: 22px;
         padding: 10px 20px;
-        color: ${counter === quantity ? "#737373" : "#e6e6e6"};
+        color: ${counter === length ? "#737373" : "#e6e6e6"};
       }
 `;
 

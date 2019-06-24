@@ -1,4 +1,4 @@
-class Store {
+class LocalStore {
   constructor(name){
     this.name = name;
     this.store = localStorage;
@@ -13,5 +13,5 @@ class Store {
   }
 }
 
-export default Store
+export default LocalStore
 
